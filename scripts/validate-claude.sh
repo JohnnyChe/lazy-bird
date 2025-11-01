@@ -75,21 +75,32 @@ rm -f "$TEST_OUTPUT"
 # Test 4: File modification test
 echo ""
 echo "Test 4: Testing file modification capability..."
-TEST_FILE=$(mktemp)
+
+# Create isolated temp directory for safe testing
+TEST_DIR=$(mktemp -d)
+TEST_FILE="$TEST_DIR/test-file.txt"
 echo "original content" > "$TEST_FILE"
 
-# Try to modify file
-claude -p "Modify the file $TEST_FILE to contain exactly the text 'modified by claude'" > /dev/null 2>&1 || true
+# Try to modify file with dangerous flag in isolated directory
+# This is safe because: 1) isolated temp dir, 2) limited scope, 3) will be deleted
+cd "$TEST_DIR"
+claude -p "Modify the file $TEST_FILE to contain exactly the text 'modified by claude'" \
+    --dangerously-skip-permissions > /dev/null 2>&1
+RESULT=$?
+cd - > /dev/null
 
 if grep -q "modified by claude" "$TEST_FILE"; then
     pass "Claude can modify files headlessly"
+elif [ $RESULT -ne 0 ]; then
+    fail "Claude execution failed (exit code: $RESULT)"
+    echo "   Check Claude Code installation"
 elif grep -q "original content" "$TEST_FILE"; then
-    warn "Claude did not modify file - may require --dangerously-skip-permissions"
-    echo "   This means full automation requires Docker containers"
+    fail "Claude did not modify file even with --dangerously-skip-permissions"
+    echo "   This indicates a problem with Claude Code permissions"
 else
-    warn "File state unclear after Claude execution"
+    fail "File state unclear after Claude execution"
 fi
-rm -f "$TEST_FILE"
+rm -rf "$TEST_DIR"
 
 # Test 5: Tool restrictions
 echo ""
@@ -125,15 +136,24 @@ rm -f "$TEST_OUTPUT"
 echo ""
 echo "Test 7: Testing containerized dangerous mode..."
 if command -v docker &> /dev/null; then
+    # Try docker ps first (works if user has permissions)
     if docker ps > /dev/null 2>&1; then
         pass "Docker available for dangerous mode"
         echo "   Full automation possible with containerization"
+    # If permission denied, check if daemon is running via systemctl
+    elif systemctl is-active --quiet docker 2>/dev/null; then
+        pass "Docker daemon running (requires user permissions)"
+        echo "   Add user to docker group: sudo usermod -aG docker \$USER"
+    # Try with sudo as last resort
+    elif sudo -n docker ps > /dev/null 2>&1; then
+        pass "Docker available with sudo"
+        echo "   For automation, add user to docker group"
     else
-        warn "Docker installed but daemon not running"
+        fail "Docker installed but daemon not running"
         echo "   Start with: sudo systemctl start docker"
     fi
 else
-    warn "Docker not available"
+    fail "Docker not available"
     echo "   Dangerous mode will not be available"
     echo "   Install with: sudo pacman -S docker  # or apt-get install docker.io"
 fi
