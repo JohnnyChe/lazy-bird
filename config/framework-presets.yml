@@ -28,7 +28,7 @@ presets:
   godot:
     name: "Godot Engine"
     description: "GDScript game engine with gdUnit4 testing"
-    test_command: "godot --headless -s addons/gdUnit4/bin/GdUnitCmdTool.gd --test-suite all"
+    test_command: "godot --headless -s addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a test/"
     build_command: null
     lint_command: null
     format_command: null
