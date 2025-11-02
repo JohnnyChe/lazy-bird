@@ -1,23 +1,23 @@
-# Game Dev Automation - Progressive Development Plan
+# Lazy_Bird Development Automation - Progressive Development Plan
 
 ## ⚠️ CRITICAL: Read This First
 
 **This plan has been corrected from the original v1.** Key changes:
 - ✅ Uses actual Claude Code CLI commands (`claude -p`, not fictional `--task` flag)
 - ✅ Tasks from GitHub/GitLab Issues (not task files)
-- ✅ gdUnit4 test framework (not GUT)
-- ✅ Godot Server for test coordination
+- ✅ Multi-framework support (15+ frameworks via presets)
+- ✅ Test Server for multi-framework test coordination
 - ✅ Phase 0 validation required before implementation
 - ✅ Wizard-first installation approach
 - ✅ Corrected resource estimates
 
 **Before implementing ANY phase, you MUST:**
-1. Run Phase 0 validation: `./tests/phase0/validate-all.sh`
+1. Run Phase 0 validation: `./tests/phase0/validate-all.sh --type <framework>`
 2. Ensure validation passes completely
 3. Use the wizard for installation: `./wizard.sh`
 
 ## 🎯 Vision
-Build an automated game development system that continues working while you're away, scaling from simple task automation to enterprise-level orchestration based on your actual needs.
+Build an automated development system that continues working while you're away, supporting any framework (Godot, React, Django, Rust, etc.) and scaling from simple task automation to enterprise-level orchestration based on your actual needs.
 
 ## 🔑 Core Philosophy
 **Start simple, add complexity only when needed.** Each phase must deliver immediate value.
@@ -33,14 +33,19 @@ Build an automated game development system that continues working while you're a
 
 #### What Phase 0 Tests
 ```bash
-# Run comprehensive validation
-./tests/phase0/validate-all.sh /path/to/godot-project
+# Run comprehensive validation with framework type
+./tests/phase0/validate-all.sh /path/to/project --type <framework>
+
+# Examples:
+./tests/phase0/validate-all.sh ~/my-godot-game --type godot
+./tests/phase0/validate-all.sh ~/my-react-app --type react
+./tests/phase0/validate-all.sh ~/my-django-app --type django
 
 # Tests performed:
 ✓ Claude Code CLI exists and works
 ✓ Correct flags available (-p, --allowedTools, etc.)
-✓ Godot 4.x installed with headless mode
-✓ gdUnit4 test framework installed
+✓ Framework-specific tools installed (varies by framework)
+✓ Test framework installed and functional
 ✓ Git worktrees work correctly
 ✓ GitHub/GitLab API access configured
 ✓ Required directory permissions

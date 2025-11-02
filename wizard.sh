@@ -1,6 +1,6 @@
 #!/bin/bash
 # Lazy_Bird Setup Wizard
-# Automate game development while you sleep 🦜💤
+# Automate ANY development project while you sleep 🦜💤
 
 set -euo pipefail
 

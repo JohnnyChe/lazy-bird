@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Lazy_Birtd** is a progressive game development automation system that enables Claude Code instances to work on game development tasks autonomously while developers are away. The system is specifically designed for Godot game developers and scales from simple task automation to enterprise-level orchestration.
+**Lazy_Bird** is a progressive development automation system that enables Claude Code instances to work on software development tasks autonomously while developers are away. The system supports 15+ frameworks (Godot, Unity, Python, Rust, React, Django, and more) and scales from simple task automation to enterprise-level orchestration.
 
 ## Core Philosophy
 

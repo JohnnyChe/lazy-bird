@@ -335,7 +335,7 @@ if [ $TESTS_FAILED -eq 0 ]; then
     echo "Next Steps:"
     echo "  1. Run the setup wizard: ./wizard.sh"
     echo "  2. Create your first issue with 'ready' label"
-    echo "  3. Watch Lazy_Bird automate your game development!"
+    echo "  3. Watch Lazy_Bird automate your development workflow!"
     echo ""
     exit 0
 else

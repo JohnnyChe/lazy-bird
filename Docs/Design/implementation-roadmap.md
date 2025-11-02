@@ -6,8 +6,8 @@ This roadmap reflects the **corrected architecture**:
 - **Phase 0 validation is MANDATORY first step**
 - Uses actual Claude Code CLI commands (`claude -p`, not fictional `--task`)
 - GitHub/GitLab Issues (not task files)
-- Godot Server for test coordination
-- gdUnit4 test framework
+- Test Server for test coordination (multi-framework support)
+- Framework presets (15+ frameworks supported)
 - Wizard-first installation approach
 
 ## 🧙 START HERE: Setup Wizard (Recommended)
@@ -25,7 +25,7 @@ bash wizard.sh
 
 ### What the Wizard Does For You
 1. **Validates** your system with Phase 0 tests (REQUIRED)
-2. **Detects** system capabilities (RAM, Godot, Claude, Git)
+2. **Detects** system capabilities (RAM, framework tools, Claude, Git)
 3. **Asks** 8 simple questions about your needs
 4. **Recommends** the right phase to start
 5. **Installs** everything automatically (services, scripts, configs)
@@ -36,24 +36,24 @@ bash wizard.sh
 ### Wizard's 8 Questions
 The wizard will ask you these questions to determine your setup:
 
-1. **Godot project path?** - Where your game project is located
-2. **GitHub or GitLab?** - Which platform for issues/PRs
-3. **API token configured?** - Checks if you have access configured
-4. **Target phase?** - Or let wizard recommend based on system
-5. **RAM limit?** - How much RAM to allocate (8-16GB typical)
-6. **Docker available?** - Needed for Phase 3+ features
-7. **Remote access needed?** - VPN and dashboard (Phase 3)
+1. **Project type & framework?** - Select from 15+ presets (Godot, React, Django, Rust, etc.)
+2. **Project path?** - Where your project is located
+3. **GitHub or GitLab?** - Which platform for issues/PRs
+4. **API token configured?** - Checks if you have access configured
+5. **Target phase?** - Or let wizard recommend based on system
+6. **RAM limit?** - How much RAM to allocate (8-16GB typical)
+7. **Docker available?** - Needed for Phase 3+ features
 8. **Confirm installation?** - Final check before proceeding
 
 ### Typical Answers for Solo Dev (16GB RAM)
 ```
-1. Godot project: /home/user/my-godot-game
-2. Platform: GitHub
-3. Token: Yes (stored in ~/.config/lazy_birtd/secrets/)
-4. Phase: 1 (wizard will recommend this to start)
-5. RAM limit: 10GB (leaves 6GB for system)
-6. Docker: No initially (can add later)
-7. Remote: Not yet (Phase 3 feature)
+1. Framework: Godot (or React, Django, Rust, etc.)
+2. Project path: /home/user/my-project
+3. Platform: GitHub
+4. Token: Yes (stored in ~/.config/lazy_birtd/secrets/)
+5. Phase: 1 (wizard will recommend this to start)
+6. RAM limit: 10GB (leaves 6GB for system)
+7. Docker: No initially (can add later)
 8. Confirm: Yes
 ```
 
@@ -66,8 +66,8 @@ The wizard will ask you these questions to determine your setup:
 ### What Phase 0 Does
 Validates all assumptions before building anything:
 - Claude Code CLI exists and uses correct syntax
-- Godot 4.x with headless mode works
-- gdUnit4 test framework installed
+- Framework-specific test tools available (varies by framework)
+- Test framework installed and functional
 - Git worktrees functional
 - GitHub/GitLab API access configured
 - Required permissions and directories
@@ -78,14 +78,19 @@ Validates all assumptions before building anything:
 git clone https://github.com/yusyus/lazy_birtd.git
 cd lazy_birtd
 
-# Run comprehensive validation
-./tests/phase0/validate-all.sh /path/to/your/godot-project
+# Run comprehensive validation with framework type
+./tests/phase0/validate-all.sh /path/to/your/project --type <framework>
+
+# Examples:
+./tests/phase0/validate-all.sh ~/my-godot-game --type godot
+./tests/phase0/validate-all.sh ~/my-django-app --type django
+./tests/phase0/validate-all.sh ~/my-rust-crate --type rust
 
 # Expected output:
 ✓ Claude Code CLI found
 ✓ Correct flags available
-✓ Godot 4.x headless mode works
-✓ gdUnit4 installed and functional
+✓ Framework tools available (<framework>-specific)
+✓ Test framework installed and functional
 ✓ Git worktrees operational
 ✓ API access configured
 ✅ VALIDATION PASSED
@@ -96,9 +101,9 @@ The validation scripts will tell you exactly what to fix:
 
 ```bash
 # Individual validation scripts available:
-./scripts/validate-claude.sh          # Test Claude Code CLI
-./scripts/validate-godot.sh <project> # Test Godot + gdUnit4
-./scripts/test-worktree.sh <project>  # Test git worktrees
+./scripts/validate-claude.sh              # Test Claude Code CLI
+./scripts/validate-framework.sh <project> # Test framework-specific tools
+./scripts/test-worktree.sh <project>      # Test git worktrees
 ```
 
 **DO NOT proceed to Phase 1 until all Phase 0 tests pass!**
@@ -162,7 +167,7 @@ ISSUE_ID=$1
 ISSUE_TITLE=$2
 ISSUE_BODY=$3
 
-PROJECT_ROOT="/home/user/godot-game"
+PROJECT_ROOT="/home/user/my-project"
 WORKTREE="/tmp/agent-${ISSUE_ID}"
 BRANCH="feature-${ISSUE_ID}"
 
