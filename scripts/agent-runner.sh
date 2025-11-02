@@ -94,23 +94,32 @@ load_config() {
     fi
 
     # Parse YAML config (basic parsing, assumes key: value format)
-    GODOT_PROJECT_PATH=$(grep -E "^godot_project_path:" "$config_file" | sed 's/godot_project_path: *//' | tr -d '"' || echo "")
+    # Try new schema first (project.path), fallback to old schema (godot_project_path)
+    PROJECT_PATH=$(grep -E "^  path:" "$config_file" | head -1 | sed 's/.*path: *//' | tr -d '"' || echo "")
+
+    if [ -z "$PROJECT_PATH" ]; then
+        # Fallback to old schema for backward compatibility
+        PROJECT_PATH=$(grep -E "^godot_project_path:" "$config_file" | sed 's/godot_project_path: *//' | tr -d '"' || echo "")
+    fi
+
     REPOSITORY=$(grep -E "^repository:" "$config_file" | sed 's/repository: *//' | tr -d '"' || echo "")
 
-    if [ -z "$GODOT_PROJECT_PATH" ]; then
-        log_error "godot_project_path not found in config"
+    if [ -z "$PROJECT_PATH" ]; then
+        log_error "Project path not found in config (looked for 'project.path' or 'godot_project_path')"
         exit 2
     fi
 
-    if [ ! -d "$GODOT_PROJECT_PATH" ]; then
-        log_error "Godot project path does not exist: $GODOT_PROJECT_PATH"
+    if [ ! -d "$PROJECT_PATH" ]; then
+        log_error "Project path does not exist: $PROJECT_PATH"
         exit 2
     fi
 
-    if [ ! -d "$GODOT_PROJECT_PATH/.git" ]; then
-        log_error "Not a git repository: $GODOT_PROJECT_PATH"
+    if [ ! -d "$PROJECT_PATH/.git" ]; then
+        log_error "Not a git repository: $PROJECT_PATH"
         exit 2
     fi
+
+    log_info "Project path: $PROJECT_PATH"
 }
 
 # Parse task JSON
@@ -181,7 +190,7 @@ create_worktree() {
 
     log_info "Creating worktree: $WORKTREE_PATH"
 
-    cd "$GODOT_PROJECT_PATH" || exit 3
+    cd "$PROJECT_PATH" || exit 3
 
     # Clean up existing worktree if it exists
     if [ -d "$WORKTREE_PATH" ]; then
@@ -223,7 +232,6 @@ Implement this task following the detailed steps above. Make sure to:
 4. **IMPORTANT**: DO NOT commit your changes - the automation system will handle git operations
 
 Work in the current directory: $WORKTREE_PATH
-This is a Godot game project.
 
 **DO NOT use git commit** - just make the file changes. The automation will commit and push."
 
@@ -290,6 +298,93 @@ check_changes() {
     git status --short | tee -a "$LOG_FILE"
 
     return 0
+}
+
+# Run lint command (optional)
+run_lint() {
+    log_info "Running lint (if configured)..."
+
+    local config_file="${LAZY_BIRD_CONFIG:-$HOME/.config/lazy_birtd/config.yml}"
+
+    # Read lint command from config
+    LINT_CMD=$(grep "^lint_command:" "$config_file" | sed 's/lint_command: *//' | tr -d '"' || echo "")
+
+    if [ -z "$LINT_CMD" ] || [ "$LINT_CMD" = "null" ]; then
+        log_info "No lint command configured, skipping linting"
+        return 0
+    fi
+
+    log_info "Lint command: $LINT_CMD"
+
+    cd "$WORKTREE_PATH" || exit 3
+
+    # Execute lint
+    if eval "$LINT_CMD" > "$LOG_DIR/lint-output.log" 2>&1; then
+        log_success "Lint passed"
+        return 0
+    else
+        log_warning "Lint failed (continuing anyway)"
+        cat "$LOG_DIR/lint-output.log"
+        return 0  # Don't fail build on lint errors
+    fi
+}
+
+# Run test command
+run_tests() {
+    log_info "Running tests..."
+
+    local config_file="${LAZY_BIRD_CONFIG:-$HOME/.config/lazy_birtd/config.yml}"
+
+    # Read test command from config
+    TEST_CMD=$(grep "^test_command:" "$config_file" | sed 's/test_command: *//' | tr -d '"' || echo "")
+
+    if [ -z "$TEST_CMD" ] || [ "$TEST_CMD" = "null" ]; then
+        log_warning "No test command configured, skipping tests"
+        return 0
+    fi
+
+    log_info "Test command: $TEST_CMD"
+
+    cd "$WORKTREE_PATH" || exit 3
+
+    # Execute tests
+    if eval "$TEST_CMD" > "$LOG_DIR/test-output.log" 2>&1; then
+        log_success "Tests passed"
+        return 0
+    else
+        log_error "Tests failed"
+        cat "$LOG_DIR/test-output.log"
+        return 1
+    fi
+}
+
+# Run build command (optional)
+run_build() {
+    log_info "Running build (if configured)..."
+
+    local config_file="${LAZY_BIRD_CONFIG:-$HOME/.config/lazy_birtd/config.yml}"
+
+    # Read build command from config
+    BUILD_CMD=$(grep "^build_command:" "$config_file" | sed 's/build_command: *//' | tr -d '"' || echo "")
+
+    if [ -z "$BUILD_CMD" ] || [ "$BUILD_CMD" = "null" ]; then
+        log_info "No build command configured, skipping build"
+        return 0
+    fi
+
+    log_info "Build command: $BUILD_CMD"
+
+    cd "$WORKTREE_PATH" || exit 3
+
+    # Execute build
+    if eval "$BUILD_CMD" > "$LOG_DIR/build-output.log" 2>&1; then
+        log_success "Build succeeded"
+        return 0
+    else
+        log_error "Build failed"
+        cat "$LOG_DIR/build-output.log"
+        return 1
+    fi
 }
 
 # Commit changes
@@ -427,7 +522,7 @@ cleanup_worktree() {
         return 0
     fi
 
-    cd "$GODOT_PROJECT_PATH" || return 1
+    cd "$PROJECT_PATH" || return 1
 
     # Remove worktree
     if git worktree remove "$WORKTREE_PATH" --force 2>/dev/null; then
@@ -469,35 +564,53 @@ main() {
     trap cleanup_worktree EXIT
 
     # Initialization
-    log_info "Step 1/8: Checking dependencies..."
+    log_info "Step 1/11: Checking dependencies..."
     check_dependencies
 
-    log_info "Step 2/8: Loading configuration..."
+    log_info "Step 2/11: Loading configuration..."
     load_config
 
-    log_info "Step 3/8: Parsing task..."
+    log_info "Step 3/11: Parsing task..."
     parse_task "$TASK_FILE"
 
-    log_info "Step 3.5/8: Updating labels to 'in-process'..."
+    log_info "Step 3.5/11: Updating labels to 'in-process'..."
     update_labels_to_processing
 
-    log_info "Step 4/8: Creating worktree..."
+    log_info "Step 4/11: Creating worktree..."
     create_worktree
 
     # Execute task
-    log_info "Step 5/8: Running Claude Code..."
+    log_info "Step 5/11: Running Claude Code..."
     if ! run_claude; then
         log_error "Claude execution failed"
         exit 1
     fi
 
-    log_info "Step 6/8: Checking for changes..."
+    log_info "Step 6/11: Checking for changes..."
     if ! check_changes; then
         log_warning "No changes to commit, task may not have completed"
         exit 1
     fi
 
-    log_info "Step 7/8: Committing and pushing..."
+    log_info "Step 7/11: Running lint..."
+    if ! run_lint; then
+        log_error "Lint failed"
+        # Continue anyway - lint is optional
+    fi
+
+    log_info "Step 8/11: Running tests..."
+    if ! run_tests; then
+        log_error "Tests failed"
+        exit 1
+    fi
+
+    log_info "Step 9/11: Running build..."
+    if ! run_build; then
+        log_error "Build failed"
+        exit 1
+    fi
+
+    log_info "Step 10/11: Committing and pushing..."
     if ! commit_changes; then
         log_error "Failed to commit changes"
         exit 1
@@ -508,13 +621,13 @@ main() {
         exit 1
     fi
 
-    log_info "Step 8/8: Creating pull request..."
+    log_info "Step 11/11: Creating pull request..."
     if ! create_pr; then
         log_error "Failed to create PR"
         exit 1
     fi
 
-    log_info "Step 8.5/8: Updating labels to 'in-review'..."
+    log_info "Step 11.5/11: Updating labels to 'in-review'..."
     update_labels_to_review
 
     # Success!
