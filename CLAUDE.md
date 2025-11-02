@@ -22,17 +22,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **See:** `Docs/Design/claude-cli-reference.md` for complete command reference.
 
+## Framework Selection
+
+**Lazy_Bird supports 15+ frameworks out-of-the-box.** During wizard setup (Q1), select your project type and framework. The system automatically configures test/build/lint commands via presets.
+
+### Supported Frameworks
+
+**Game Engines:** Godot, Unity, Unreal, Bevy
+**Backend:** Django, Flask, FastAPI, Express, Rails
+**Frontend:** React, Vue, Angular, Svelte
+**Languages:** Python, Rust, Node.js, Go, C/C++, Java
+**Custom:** Any framework with CLI test runner
+
+### How to Choose
+
+1. **Use a preset if available** - Automatic configuration, tested presets
+2. **Choose "Custom" for unsupported frameworks** - Specify test commands manually
+3. **Defaults to Godot** - Backward compatibility with original design
+
+### Framework Configuration
+
+Framework presets live in `config/framework-presets.yml` and include:
+- `test_command` - Required, runs tests
+- `build_command` - Optional, compiles project
+- `lint_command` - Optional, code quality checks
+- `format_command` - Optional, code formatting
+
+**Example:** Django preset includes `pytest` for tests, `pylint` for linting, `black` for formatting.
+
+**See:** `Docs/Design/multi-framework-support.md` for complete details.
+
 ##Phase 0: Validation (REQUIRED FIRST STEP)
 
 **Before implementing any automation, run Phase 0 validation:**
 
 ```bash
-./tests/phase0/validate-all.sh /path/to/godot-project
+# Godot project (default)
+./tests/phase0/validate-all.sh /path/to/your/project
+
+# Other frameworks - specify --type
+./tests/phase0/validate-all.sh /path/to/your/project --type python
+./tests/phase0/validate-all.sh /path/to/your/project --type rust
+./tests/phase0/validate-all.sh /path/to/your/project --type nodejs
 ```
 
 **Phase 0 validates:**
 - Claude Code CLI capabilities (headless mode, flags)
-- Godot + gdUnit4 test framework
+- Framework-specific tools (based on --type)
 - Git worktree functionality
 - GitHub/GitLab API access
 - System resources (RAM, disk, CPU)

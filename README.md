@@ -13,12 +13,14 @@
     ·▀▀▀▀ ▀▀▀.▀  ▀ ▀▀▀▀▀▀•
 ```
 
-### Automate game development while you sleep 🦜💤
+### Automate ANY development project while you sleep 🦜💤
 
 **Your AI-powered development assistant that works 24/7**
 
+**Works with: Godot, Unity, Python, Rust, Node.js, Django, React, and more!**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Godot](https://img.shields.io/badge/Godot-4.2+-blue.svg)](https://godotengine.org/)
+[![Multi-Framework](https://img.shields.io/badge/Frameworks-15+-blue.svg)](#-supported-frameworks)
 [![Claude](https://img.shields.io/badge/Claude-Code-purple.svg)](https://claude.ai/code)
 [![Status](https://img.shields.io/badge/Status-Phase%201%20Complete-brightgreen.svg)]()
 
@@ -30,7 +32,7 @@
 
 ## 🎯 What is Lazy_Bird?
 
-Lazy_Bird is a **progressive automation system** that lets Claude Code work on your Godot game projects autonomously. Create GitHub Issues in the morning, review Pull Requests at lunch, and merge completed features in the evening—all while you focus on creative work or simply relax.
+Lazy_Bird is a **progressive automation system** that lets Claude Code work on your development projects autonomously—game engines, backends, frontends, or any codebase. Create GitHub Issues in the morning, review Pull Requests at lunch, and merge completed features in the evening—all while you focus on creative work or simply relax.
 
 ```
 Morning (7 AM)          Work Hours                 Lunch (12 PM)         Evening (6 PM)
@@ -41,6 +43,42 @@ Go to work             Creates PRs if passing      Back to work          Enjoy l
 ```
 
 **The result?** You save 20-100 hours per month on repetitive development tasks.
+
+---
+
+## 📦 Supported Frameworks
+
+Lazy_Bird works with **any project type** through framework presets. During setup, simply select your framework and the system configures the right test commands automatically.
+
+### Game Engines
+- **Godot** - GDScript/C#, gdUnit4 testing
+- **Unity** - C#, NUnit/Unity Test Framework
+- **Unreal** - C++/Blueprint, automation tests
+- **Bevy** - Rust game engine, cargo test
+
+### Backend Frameworks
+- **Django** - Python web framework, `python manage.py test`
+- **Flask** - Python micro-framework, pytest
+- **FastAPI** - Modern Python API, pytest
+- **Express** - Node.js web framework, Jest/Mocha
+- **Rails** - Ruby web framework, RSpec
+
+### Frontend Frameworks
+- **React** - JavaScript/TypeScript, Jest/RTL
+- **Vue** - JavaScript/TypeScript, Vitest
+- **Angular** - TypeScript, Jasmine/Karma
+- **Svelte** - JavaScript/TypeScript, Vitest
+
+### Programming Languages (General)
+- **Python** - pytest, unittest, any test framework
+- **Rust** - cargo test, cargo-nextest
+- **Node.js** - npm test, Jest, Mocha, Vitest
+- **Go** - go test, testify
+- **C/C++** - make test, CTest, CMake
+- **Java** - JUnit, Maven, Gradle
+
+### Custom Projects
+**Don't see your framework?** Choose "Custom" during setup and specify your test commands manually. Lazy_Bird supports any framework with a command-line test runner!
 
 ---
 
@@ -61,10 +99,11 @@ gh issue create --template task \
 
 **That's it!** The system will pick up your issue, implement the feature, run tests, and create a PR—all automatically.
 
-## Features
+## ✨ Features
 
 - 🤖 **Autonomous Development** - Claude Code works while you're away
-- 🧪 **Automated Testing** - Runs gdUnit4 tests, retries on failure
+- 🎯 **Multi-Framework Support** - Works with 15+ frameworks out-of-the-box
+- 🧪 **Automated Testing** - Runs framework tests, retries on failure
 - 🌿 **Safe Git Workflow** - Isolated worktrees, automatic PRs
 - 📊 **Progress Monitoring** - Check status from phone via notifications
 - 🔐 **Security First** - Secret management, containerized execution
@@ -94,13 +133,20 @@ Go to work              Creates PRs if passing     Back to work        Plan tomo
 
 **Phase 3+:** Remote access, CI/CD, enterprise features
 
-## Requirements
+## 💻 Requirements
 
+**Universal Requirements:**
 - Linux (Ubuntu 20.04+, Arch, Manjaro, etc.) or Windows WSL2
-- Godot 4.2+
 - Claude Code CLI
 - GitHub or GitLab account
 - 8GB RAM minimum, 16GB recommended
+
+**Framework-Specific:**
+- **Game Engines:** Godot 4.2+, Unity 2021+, Unreal 5+, etc.
+- **Python:** Python 3.8+, pip
+- **Rust:** Rust 1.70+, cargo
+- **Node.js:** Node.js 16+, npm
+- **Or any framework** with command-line test runner
 
 ## Installation
 
@@ -117,17 +163,24 @@ git clone https://github.com/yusyus/lazy_birtd.git
 cd lazy_birtd
 
 # Run Phase 0 validation (required)
-./tests/phase0/validate-all.sh /path/to/your/godot-project
+# For Godot projects (default)
+./tests/phase0/validate-all.sh /path/to/your/project
+
+# For other frameworks, specify --type
+./tests/phase0/validate-all.sh /path/to/your/project --type python
+./tests/phase0/validate-all.sh /path/to/your/project --type rust
+./tests/phase0/validate-all.sh /path/to/your/project --type nodejs
 
 # If validation passes, run wizard
 ./wizard.sh
 ```
 
 The wizard will:
+- Ask for your project type (Godot, Python, Rust, etc.)
 - Detect your system capabilities
 - Ask 8 simple questions
+- Load framework preset automatically
 - Install appropriate phase
-- Set up Godot Server
 - Configure issue watcher
 - Create issue templates
 - Validate everything works
@@ -184,22 +237,75 @@ journalctl -u godot-server -f
 ./wizard.sh --weekly-review   # Progress report
 ```
 
-## Example Workflow
+## 📋 Example Workflows
+
+### Game Developer (Godot)
 
 ```bash
 # Morning routine (5 minutes)
 gh issue create --template task --title "Add pause menu" --label "ready"
 gh issue create --template task --title "Fix jump physics" --label "ready"
 gh issue create --template task --title "Add sound effects" --label "ready"
+# → Claude runs gdUnit4 tests, creates PRs
 
 # Check at lunch (2 minutes)
 gh pr list  # Review created PRs
 gh pr review 123 --approve
 
 # Evening (5 minutes)
-git pull
-# Test merged changes
-# Plan tomorrow's tasks
+git pull && godot --headless -s res://test_runner.gd
+# Test merged changes in game
+```
+
+### Web Developer (Django/Python)
+
+```bash
+# Morning
+gh issue create --template task --title "Add JWT authentication" --label "ready"
+gh issue create --template task --title "Optimize database queries" --label "ready"
+# → Claude runs pytest, creates PRs
+
+# Lunch break
+gh pr list
+gh pr review 45 --approve
+# → Merged automatically
+
+# Evening
+git pull && python manage.py test
+# All tests pass, deploy to staging
+```
+
+### Systems Programmer (Rust)
+
+```bash
+# Morning
+gh issue create --template task --title "Optimize hash function" --label "ready"
+gh issue create --template task --title "Add memory pooling" --label "ready"
+# → Claude runs cargo test, creates PRs
+
+# Review later
+gh pr list
+gh pr diff 89  # Check performance improvements
+gh pr review 89 --approve
+
+# Deploy
+git pull && cargo build --release
+```
+
+### Frontend Developer (React)
+
+```bash
+# Morning
+gh issue create --template task --title "Add dark mode toggle" --label "ready"
+gh issue create --template task --title "Improve loading states" --label "ready"
+# → Claude runs Jest tests, creates PRs
+
+# Afternoon
+gh pr list
+gh pr review 67 --approve
+# → CI/CD deploys to preview
+
+# Check preview, merge to production
 ```
 
 ## Project Structure
@@ -326,10 +432,16 @@ journalctl -u godot-server -f
 journalctl -u issue-watcher -f
 ```
 
-## FAQ
+## ❓ FAQ
 
 **Q: Does this really work?**
 A: The architecture is sound, but relies on Claude Code CLI working in headless mode. Run Phase 0 validation first to verify.
+
+**Q: What frameworks are supported?**
+A: 15+ frameworks out-of-the-box: Godot, Unity, Unreal, Bevy, Django, Flask, FastAPI, Express, React, Vue, Angular, Svelte, Python, Rust, Node.js, Go, C/C++, Java, and more. Choose "Custom" during setup for any framework with command-line tests.
+
+**Q: How do I add a new framework?**
+A: Select "Custom" during wizard setup and specify your test commands manually. For example, if you use pytest-cov: `test_command: "pytest --cov=src"`. Any command-line test runner works!
 
 **Q: Is it safe?**
 A: Yes, with proper setup. Claude runs in Docker containers, uses git worktrees, and has permission restrictions. Follow security baseline.
@@ -337,8 +449,8 @@ A: Yes, with proper setup. Claude runs in Docker containers, uses git worktrees,
 **Q: How much does it cost?**
 A: Claude API costs vary. Expect $50-300/month depending on usage. Budget limits prevent overages.
 
-**Q: Can I use it with other game engines?**
-A: Currently designed for Godot, but architecture is adaptable. Would need engine-specific test integration.
+**Q: Can I use it with game engines besides Godot?**
+A: Yes! Unity, Unreal, and Bevy are supported via presets. During setup, select "Game Engine" and choose your engine. The wizard configures the appropriate test runner automatically.
 
 **Q: Does it work on Windows?**
 A: Yes, via WSL2. Native Windows support is experimental.
@@ -386,11 +498,11 @@ Contributions welcome! Please:
 
 MIT License - see [LICENSE](LICENSE) file.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- Built for [Claude Code](https://claude.ai/code)
-- Designed for [Godot Engine](https://godotengine.org/)
-- Uses [gdUnit4](https://github.com/MikeSchulze/gdUnit4) for testing
+- Built with [Claude Code](https://claude.ai/code)
+- Supports [Godot Engine](https://godotengine.org/), [Unity](https://unity.com/), [Django](https://www.djangoproject.com/), [React](https://react.dev/), [Rust](https://www.rust-lang.org/), and many more
+- Framework test runners: gdUnit4, pytest, Jest, cargo test, and more
 
 ## Support
 
@@ -402,7 +514,7 @@ MIT License - see [LICENSE](LICENSE) file.
 
 <div align="center">
 
-**Made with ☕ and 🤖 for game developers who'd rather be creating than coding**
+**Made with ☕ and 🤖 for developers who'd rather be creating than debugging**
 
 ⭐ Star this repo if Lazy_Bird saves you time!
 
@@ -410,6 +522,6 @@ MIT License - see [LICENSE](LICENSE) file.
     🦜 Fly lazy, code smart
 ```
 
-**Status:** Phase 1 Complete ✅ | Production Ready | Start Automating Today!
+**Status:** Phase 1 Complete ✅ | Multi-Framework Support ✅ | Production Ready | Start Automating Today!
 
 </div>
