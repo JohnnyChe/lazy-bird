@@ -246,44 +246,37 @@ initialize_godot_worktree() {
 
     log_info "[$PROJECT_ID] Initializing Godot project in worktree..."
 
-    # Check if .godot exists in main project
-    if [ ! -d "$PROJECT_PATH/.godot" ]; then
-        log_warning "[$PROJECT_ID] .godot directory not found in main project"
-        log_info "[$PROJECT_ID] Attempting to initialize with godot --import..."
+    cd "$WORKTREE_PATH" || exit 3
 
-        cd "$WORKTREE_PATH" || exit 3
-
-        # Check if godot command is available
-        if ! command -v godot &> /dev/null; then
-            log_warning "[$PROJECT_ID] godot command not found, skipping initialization"
-            return 0
-        fi
-
-        # Run godot --import to initialize .godot directory
-        if timeout 30 godot --headless --import > "$LOG_DIR/godot-init.log" 2>&1; then
-            log_success "[$PROJECT_ID] Godot project initialized with --import"
-        else
-            log_warning "[$PROJECT_ID] Godot --import failed (tests may fail)"
-            cat "$LOG_DIR/godot-init.log" || true
-        fi
-
+    # Check if godot command is available
+    if ! command -v godot &> /dev/null; then
+        log_warning "[$PROJECT_ID] godot command not found, skipping initialization"
         return 0
     fi
 
-    # Copy .godot directory from main project to worktree
-    log_info "[$PROJECT_ID] Copying .godot directory from main project to worktree..."
+    # Always run godot --editor --quit to initialize the project properly
+    # This scans all scripts and registers global classes, which is required for gdUnit4
+    log_info "[$PROJECT_ID] Running 'godot --editor --quit --headless' to scan scripts..."
 
-    if cp -r "$PROJECT_PATH/.godot" "$WORKTREE_PATH/.godot"; then
-        log_success "[$PROJECT_ID] .godot directory copied successfully"
+    if timeout 45 godot --editor --quit --headless > "$LOG_DIR/godot-init.log" 2>&1; then
+        log_success "[$PROJECT_ID] Godot project initialized successfully"
 
-        # Verify critical files exist
-        if [ -f "$WORKTREE_PATH/.godot/global_script_class_cache.cfg" ]; then
-            log_success "[$PROJECT_ID] Plugin class cache available"
+        # Verify .godot directory was created
+        if [ -d ".godot" ]; then
+            log_success "[$PROJECT_ID] .godot directory created"
+
+            # Verify critical files exist
+            if [ -f ".godot/global_script_class_cache.cfg" ]; then
+                log_success "[$PROJECT_ID] Plugin class cache generated"
+            else
+                log_warning "[$PROJECT_ID] Plugin class cache not found (tests may fail)"
+            fi
         else
-            log_warning "[$PROJECT_ID] Plugin class cache not found (tests may fail)"
+            log_warning "[$PROJECT_ID] .godot directory not created (tests may fail)"
         fi
     else
-        log_warning "[$PROJECT_ID] Failed to copy .godot directory (tests may fail)"
+        log_warning "[$PROJECT_ID] Godot initialization had issues (tests may fail)"
+        cat "$LOG_DIR/godot-init.log" || true
     fi
 
     return 0
