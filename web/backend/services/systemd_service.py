@@ -149,16 +149,18 @@ class SystemdService:
 
     def get_all_services_status(self) -> Dict[str, Dict]:
         """
-        Get status of all Lazy_Bird services
+        Get status of all Lazy_Bird services (dynamically scans filesystem)
 
         Returns:
             Dictionary mapping service names to status info
         """
-        services = ['issue-watcher', 'godot-server']
+        # Get list of actual service files from filesystem
+        service_files = self.list_services()
         statuses = {}
 
-        for service in services:
-            statuses[service] = self.get_service_status(service)
+        for service_info in service_files:
+            service_name = service_info['name']
+            statuses[service_name] = self.get_service_status(service_name)
 
         return statuses
 
