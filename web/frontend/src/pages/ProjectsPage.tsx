@@ -56,45 +56,22 @@ export function ProjectsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto p-6 lg:p-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Projects</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage your development projects</p>
+    <>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto p-6 lg:p-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Projects</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage your development projects</p>
+            </div>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              <Plus size={20} />
+              <span>Add Project</span>
+            </button>
           </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
-          >
-            <Plus size={20} />
-            <span>Add Project</span>
-          </button>
-        </div>
-
-      {/* Add/Edit Form */}
-      {(showAddForm || editingProject) && (
-        <ProjectForm
-          project={editingProject}
-          onClose={() => {
-            setShowAddForm(false);
-            setEditingProject(null);
-          }}
-          onSave={async (data) => {
-            try {
-              if (editingProject) {
-                await updateProject.mutateAsync({ id: editingProject.id, data });
-              } else {
-                await createProject.mutateAsync(data);
-              }
-              setShowAddForm(false);
-              setEditingProject(null);
-            } catch (err) {
-              console.error('Save failed:', err);
-            }
-          }}
-        />
-      )}
 
         {/* Projects List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -192,6 +169,31 @@ export function ProjectsPage() {
         </div>
       </div>
     </div>
+
+    {/* Add/Edit Form Modal - Rendered outside main container */}
+    {(showAddForm || editingProject) && (
+      <ProjectForm
+        project={editingProject}
+        onClose={() => {
+          setShowAddForm(false);
+          setEditingProject(null);
+        }}
+        onSave={async (data) => {
+          try {
+            if (editingProject) {
+              await updateProject.mutateAsync({ id: editingProject.id, data });
+            } else {
+              await createProject.mutateAsync(data);
+            }
+            setShowAddForm(false);
+            setEditingProject(null);
+          } catch (err) {
+            console.error('Save failed:', err);
+          }
+        }}
+      />
+    )}
+    </>
   );
 }
 
