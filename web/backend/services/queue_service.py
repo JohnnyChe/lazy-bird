@@ -300,3 +300,52 @@ class QueueService:
             'by_complexity': complexity,
             'queue_dir': str(self.queue_dir)
         }
+
+    def get_task_logs(self, project_id: str, issue_id: int, lines: int = None) -> Dict[str, Any]:
+        """
+        Get logs for a specific task
+
+        Args:
+            project_id: Project ID
+            issue_id: Issue ID
+            lines: Number of lines to return (None = all lines)
+
+        Returns:
+            Dictionary with log content and metadata
+        """
+        log_file = self.log_dir / f"agent-{project_id}-task-{issue_id}.log"
+
+        result = {
+            'log_file': str(log_file),
+            'exists': log_file.exists(),
+            'content': None,
+            'size_bytes': None,
+            'lines_count': None,
+            'modified_at': None
+        }
+
+        if not log_file.exists():
+            return result
+
+        try:
+            # Get file stats
+            stat = log_file.stat()
+            result['size_bytes'] = stat.st_size
+            result['modified_at'] = datetime.fromtimestamp(stat.st_mtime).isoformat()
+
+            # Read log file
+            with open(log_file, 'r') as f:
+                log_lines = f.readlines()
+                result['lines_count'] = len(log_lines)
+
+                # Return requested number of lines or all
+                if lines:
+                    log_lines = log_lines[-lines:] if len(log_lines) > lines else log_lines
+
+                result['content'] = ''.join(log_lines)
+
+        except Exception as e:
+            logger.error(f"Error reading log file {log_file}: {e}")
+            result['error'] = str(e)
+
+        return result

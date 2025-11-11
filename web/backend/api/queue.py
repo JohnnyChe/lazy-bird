@@ -118,3 +118,34 @@ def get_queue_stats():
     except Exception as e:
         logger.error(f"Error getting queue stats: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@queue_bp.route('/<project_id>/<int:issue_id>/logs', methods=['GET'])
+def get_task_logs(project_id, issue_id):
+    """
+    Get logs for a specific task
+
+    Args:
+        project_id: Project ID
+        issue_id: Issue ID
+
+    Query params:
+        lines: Number of lines to return (default: all)
+
+    Returns:
+        200: Log content and metadata
+        404: Log file not found
+        500: Server error
+    """
+    try:
+        lines = request.args.get('lines', type=int)
+        logs = queue_service.get_task_logs(project_id, issue_id, lines=lines)
+
+        if not logs['exists']:
+            return jsonify({'error': 'Log file not found'}), 404
+
+        return jsonify(logs), 200
+
+    except Exception as e:
+        logger.error(f"Error getting logs for {project_id}/task-{issue_id}: {e}")
+        return jsonify({'error': str(e)}), 500

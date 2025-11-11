@@ -1,7 +1,7 @@
 /**
  * Queue page - View and manage task queue
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueue, useQueueStats, useCancelTask } from '../hooks/useQueue';
 import { ExternalLink, X, AlertCircle, Clock, FileText } from 'lucide-react';
 import type { Task } from '../types/api';
@@ -234,11 +234,48 @@ export function QueuePage() {
 
 // Task Details Modal
 function TaskDetailsModal({ task, onClose }: { task: Task; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<'details' | 'logs'>('details');
+  const [logs, setLogs] = useState<string | null>(null);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsError, setLogsError] = useState<string | null>(null);
+
+  const fetchLogs = async () => {
+    if (!task.project_id || !task.issue_id) return;
+
+    setLogsLoading(true);
+    setLogsError(null);
+    try {
+      const response = await fetch(`http://localhost:5000/api/queue/${task.project_id}/${task.issue_id}/logs`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          setLogsError('No logs found for this task yet');
+        } else {
+          throw new Error('Failed to fetch logs');
+        }
+        return;
+      }
+      const data = await response.json();
+      setLogs(data.content || 'No log content available');
+    } catch (error) {
+      setLogsError('Failed to load logs');
+      console.error('Error fetching logs:', error);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  // Fetch logs when logs tab is selected
+  useEffect(() => {
+    if (activeTab === 'logs' && logs === null && !logsLoading) {
+      fetchLogs();
+    }
+  }, [activeTab]);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-start justify-between mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {task.title}
@@ -254,6 +291,16 @@ function TaskDetailsModal({ task, onClose }: { task: Task; onClose: () => void }
                 }`}>
                   {task.complexity}
                 </span>
+                {task.status && (
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    task.status === 'completed' || task.status === 'completed-no-changes' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                    task.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                    task.status === 'in-progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                  }`}>
+                    {task.status}
+                  </span>
+                )}
               </div>
             </div>
             <button
@@ -263,6 +310,34 @@ function TaskDetailsModal({ task, onClose }: { task: Task; onClose: () => void }
               <X size={20} />
             </button>
           </div>
+
+          {/* Tabs */}
+          <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'details'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Details
+            </button>
+            <button
+              onClick={() => setActiveTab('logs')}
+              className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'logs'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Logs
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">{activeTab === 'details' ? (
+          <div>
 
           {/* Project Info */}
           {(task.project_name || task.project_id) && (
@@ -303,7 +378,35 @@ function TaskDetailsModal({ task, onClose }: { task: Task; onClose: () => void }
             </div>
           )}
 
-          {/* Actions */}
+          </div>
+        ) : (
+          <div>
+            {/* Logs Tab */}
+            {logsLoading ? (
+              <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                Loading logs...
+              </div>
+            ) : logsError ? (
+              <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                {logsError}
+              </div>
+            ) : logs ? (
+              <div className="bg-gray-900 dark:bg-black rounded-lg p-4 overflow-auto">
+                <pre className="text-sm text-gray-100 font-mono whitespace-pre-wrap">
+                  {logs}
+                </pre>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                No logs available
+              </div>
+            )}
+          </div>
+        )}
+        </div>
+
+        {/* Actions */}
+        <div className="p-6 border-t border-gray-200 dark:border-gray-700">
           <div className="flex justify-end gap-3">
             {task.url && (
               <a
