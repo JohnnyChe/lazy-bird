@@ -81,20 +81,28 @@ export function ProjectForm({ project, onClose, onSave }: ProjectFormProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {project ? 'Edit Project' : 'Add Project'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
-            <X size={24} />
-          </button>
+        <div className="p-6 pb-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {project ? 'Edit Project' : 'New Project'}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {project ? 'Update project configuration' : 'Add a new project to Lazy_Bird'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
           {error && (
             <div className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 p-4 rounded-lg">
               {error}
@@ -103,8 +111,8 @@ export function ProjectForm({ project, onClose, onSave }: ProjectFormProps) {
 
           {/* Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Project Name <span className="text-red-500">*</span>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Name
             </label>
             <input
               type="text"
@@ -113,40 +121,59 @@ export function ProjectForm({ project, onClose, onSave }: ProjectFormProps) {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="My Awesome Project"
             />
           </div>
 
-          {/* Type (Framework) */}
-          <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Project Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="type"
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value="godot">Godot</option>
-              <option value="unity">Unity</option>
-              <option value="python">Python</option>
-              <option value="rust">Rust</option>
-              <option value="nodejs">Node.js</option>
-              <option value="react">React</option>
-              <option value="django">Django</option>
-              <option value="flask">Flask</option>
-              <option value="custom">Custom</option>
-            </select>
+          {/* Two columns: Type and Platform */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Type
+              </label>
+              <select
+                id="type"
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="godot">Godot</option>
+                <option value="unity">Unity</option>
+                <option value="python">Python</option>
+                <option value="rust">Rust</option>
+                <option value="nodejs">Node.js</option>
+                <option value="react">React</option>
+                <option value="django">Django</option>
+                <option value="flask">Flask</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="git_platform" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Platform
+              </label>
+              <select
+                id="git_platform"
+                name="git_platform"
+                value={formData.git_platform}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="github">GitHub</option>
+                <option value="gitlab">GitLab</option>
+              </select>
+            </div>
           </div>
 
           {/* Path */}
           <div>
-            <label htmlFor="path" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Project Path <span className="text-red-500">*</span>
+            <label htmlFor="path" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Path
             </label>
             <input
               type="text"
@@ -155,15 +182,15 @@ export function ProjectForm({ project, onClose, onSave }: ProjectFormProps) {
               value={formData.path}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
               placeholder="/path/to/project"
             />
           </div>
 
           {/* Repository URL */}
           <div>
-            <label htmlFor="repository" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Repository URL <span className="text-red-500">*</span>
+            <label htmlFor="repository" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Repository
             </label>
             <input
               type="url"
@@ -172,63 +199,54 @@ export function ProjectForm({ project, onClose, onSave }: ProjectFormProps) {
               value={formData.repository}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
               placeholder="https://github.com/username/repo"
             />
           </div>
 
-          {/* Git Platform */}
-          <div>
-            <label htmlFor="git_platform" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Git Platform <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="git_platform"
-              name="git_platform"
-              value={formData.git_platform}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value="github">GitHub</option>
-              <option value="gitlab">GitLab</option>
-            </select>
-          </div>
+          {/* Optional Commands - Collapsible Section */}
+          <details className="group">
+            <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white py-2">
+              Commands (optional)
+            </summary>
+            <div className="space-y-3 pt-2">
+              <div>
+                <label htmlFor="test_command" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                  Test
+                </label>
+                <input
+                  type="text"
+                  id="test_command"
+                  name="test_command"
+                  value={formData.test_command}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
+                  placeholder="npm test"
+                />
+              </div>
 
-          {/* Test Command */}
-          <div>
-            <label htmlFor="test_command" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Test Command
-            </label>
-            <input
-              type="text"
-              id="test_command"
-              name="test_command"
-              value={formData.test_command}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="npm test"
-            />
-          </div>
+              <div>
+                <label htmlFor="build_command" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                  Build
+                </label>
+                <input
+                  type="text"
+                  id="build_command"
+                  name="build_command"
+                  value={formData.build_command}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
+                  placeholder="npm run build"
+                />
+              </div>
+            </div>
+          </details>
 
-          {/* Build Command */}
-          <div>
-            <label htmlFor="build_command" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Build Command
+          {/* Enabled toggle */}
+          <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-md">
+            <label htmlFor="enabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Enable project
             </label>
-            <input
-              type="text"
-              id="build_command"
-              name="build_command"
-              value={formData.build_command}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="npm run build"
-            />
-          </div>
-
-          {/* Enabled checkbox */}
-          <div className="flex items-center">
             <input
               type="checkbox"
               id="enabled"
@@ -237,26 +255,23 @@ export function ProjectForm({ project, onClose, onSave }: ProjectFormProps) {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <label htmlFor="enabled" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Enable project
-            </label>
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end gap-2 pt-4 mt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? 'Saving...' : project ? 'Update Project' : 'Add Project'}
+              {isSaving ? 'Saving...' : project ? 'Save Changes' : 'Create Project'}
             </button>
           </div>
         </form>

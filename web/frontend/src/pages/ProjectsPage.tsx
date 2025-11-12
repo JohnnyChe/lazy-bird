@@ -125,11 +125,7 @@ export function ProjectsPage() {
                   <Power size={18} />
                 </button>
                 <button
-                  onClick={() => {
-                    console.log('Edit button clicked for project:', project);
-                    setEditingProject(project);
-                    console.log('editingProject set to:', project);
-                  }}
+                  onClick={() => setEditingProject(project)}
                   className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded"
                   title="Edit"
                 >
@@ -176,7 +172,6 @@ export function ProjectsPage() {
     </div>
 
     {/* Add/Edit Form Modal - Rendered outside main container */}
-    {console.log('Modal check:', { showAddForm, editingProject, shouldShow: (showAddForm || editingProject) })}
     {(showAddForm || editingProject) && (
       <ProjectForm
         project={editingProject}
