@@ -1,10 +1,10 @@
 /**
  * Services page - Full systemd service management
  */
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { systemApi } from '../lib/api';
-import { AlertCircle, CheckCircle, Play, Square, RotateCw, Edit, Trash2, Plus, X, Power, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
+import { AlertCircle, CheckCircle, Play, Square, RotateCw, Edit, Trash2, Plus, Power, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useServiceControl } from '../hooks/useSystem';
 
 interface Service {
@@ -16,12 +16,7 @@ interface Service {
 }
 
 export function ServicesPage() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [serviceName, setServiceName] = useState('');
-  const [serviceContent, setServiceContent] = useState('');
-
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const serviceControl = useServiceControl();
 
@@ -43,38 +38,6 @@ export function ServicesPage() {
       return response.data;
     },
     refetchInterval: 5000,
-  });
-
-  // Create service mutation
-  const createService = useMutation({
-    mutationFn: async (data: { name: string; content: string }) => {
-      const response = await systemApi.post('/api/system/services', data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
-      queryClient.invalidateQueries({ queryKey: ['system', 'status'] });
-      setShowCreateModal(false);
-      setServiceName('');
-      setServiceContent('');
-    },
-  });
-
-  // Update service mutation
-  const updateService = useMutation({
-    mutationFn: async (data: { name: string; content: string }) => {
-      const response = await systemApi.put(`/api/system/services/${data.name}`, {
-        content: data.content,
-      });
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
-      queryClient.invalidateQueries({ queryKey: ['system', 'status'] });
-      setShowEditModal(false);
-      setSelectedService(null);
-      setServiceContent('');
-    },
   });
 
   // Delete service mutation
@@ -101,27 +64,6 @@ export function ServicesPage() {
     },
   });
 
-  const handleCreateService = () => {
-    if (!serviceName.trim() || !serviceContent.trim()) return;
-    createService.mutate({ name: serviceName, content: serviceContent });
-  };
-
-  const handleEditService = async (serviceName: string) => {
-    try {
-      const response = await systemApi.get(`/api/system/services/${serviceName}/file`);
-      setSelectedService(serviceName);
-      setServiceContent(response.data.content);
-      setShowEditModal(true);
-    } catch (err) {
-      console.error('Failed to load service file:', err);
-    }
-  };
-
-  const handleUpdateService = () => {
-    if (!selectedService || !serviceContent.trim()) return;
-    updateService.mutate({ name: selectedService, content: serviceContent });
-  };
-
   const handleDeleteService = (serviceName: string) => {
     if (confirm(`Are you sure you want to delete service "${serviceName}"? This will stop and disable the service.`)) {
       deleteService.mutate(serviceName);
@@ -129,22 +71,6 @@ export function ServicesPage() {
   };
 
   const services = servicesData?.services || [];
-
-  // Template for new service
-  const serviceTemplate = `[Unit]
-Description=My Custom Service
-After=network.target
-
-[Service]
-Type=simple
-User=your-username
-WorkingDirectory=/path/to/working/directory
-ExecStart=/usr/bin/python3 /path/to/script.py
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=default.target`;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -156,11 +82,7 @@ WantedBy=default.target`;
             <p className="text-gray-600 dark:text-gray-400">Manage systemd user services</p>
           </div>
           <button
-            onClick={() => {
-              setServiceName('');
-              setServiceContent(serviceTemplate);
-              setShowCreateModal(true);
-            }}
+            onClick={() => navigate('/services/add')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow-md"
           >
             <Plus size={20} />
@@ -175,11 +97,7 @@ WantedBy=default.target`;
               <Power size={48} className="mx-auto mb-4 text-gray-400" />
               <p className="text-gray-600 dark:text-gray-400 mb-4">No services found</p>
               <button
-                onClick={() => {
-                  setServiceName('');
-                  setServiceContent(serviceTemplate);
-                  setShowCreateModal(true);
-                }}
+                onClick={() => navigate('/services/add')}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
               >
                 <Plus size={16} />
@@ -277,7 +195,7 @@ WantedBy=default.target`;
 
                       {/* Edit/Delete buttons */}
                       <button
-                        onClick={() => handleEditService(service.name)}
+                        onClick={() => navigate(`/services/${service.name}/edit`)}
                         className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
                         title="Edit service file"
                       >
@@ -299,139 +217,6 @@ WantedBy=default.target`;
             })
           )}
         </div>
-
-        {/* Create Service Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Service</h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Service Name (without .service extension)
-                  </label>
-                  <input
-                    type="text"
-                    value={serviceName}
-                    onChange={(e) => setServiceName(e.target.value)}
-                    placeholder="my-custom-service"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Service File Content
-                  </label>
-                  <textarea
-                    value={serviceContent}
-                    onChange={(e) => setServiceContent(e.target.value)}
-                    rows={20}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-                  />
-                </div>
-
-                {createService.isError && (
-                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-                    <div className="flex items-center gap-2 text-red-800 dark:text-red-200 text-sm">
-                      <AlertCircle size={16} />
-                      <span>{(createService.error as any)?.response?.data?.error || 'Failed to create service'}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreateService}
-                    disabled={!serviceName.trim() || !serviceContent.trim() || createService.isPending}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {createService.isPending ? 'Creating...' : 'Create Service'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Service Modal */}
-        {showEditModal && selectedService && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Service: {selectedService}</h2>
-                <button
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setSelectedService(null);
-                    setServiceContent('');
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Service File Content
-                  </label>
-                  <textarea
-                    value={serviceContent}
-                    onChange={(e) => setServiceContent(e.target.value)}
-                    rows={20}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-                  />
-                </div>
-
-                {updateService.isError && (
-                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-                    <div className="flex items-center gap-2 text-red-800 dark:text-red-200 text-sm">
-                      <AlertCircle size={16} />
-                      <span>{(updateService.error as any)?.response?.data?.error || 'Failed to update service'}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setSelectedService(null);
-                      setServiceContent('');
-                    }}
-                    className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleUpdateService}
-                    disabled={!serviceContent.trim() || updateService.isPending}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {updateService.isPending ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

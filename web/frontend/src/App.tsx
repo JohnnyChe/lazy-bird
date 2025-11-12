@@ -8,6 +8,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { ProjectFormPage } from './pages/ProjectFormPage';
 import { QueuePage } from './pages/QueuePage';
 import { ServicesPage } from './pages/ServicesPage';
+import { ServiceFormPage } from './pages/ServiceFormPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
@@ -21,6 +22,8 @@ export default function App() {
           <Route path="projects/:id/edit" element={<ProjectFormPage />} />
           <Route path="queue" element={<QueuePage />} />
           <Route path="services" element={<ServicesPage />} />
+          <Route path="services/add" element={<ServiceFormPage />} />
+          <Route path="services/:name/edit" element={<ServiceFormPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
